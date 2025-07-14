@@ -11,7 +11,31 @@ A powerful Telegram bot for managing Cursor AI Background Composers with intelli
 - 🛡️ **Security**: Repository and user access control via environment variables
 - 📱 **User-friendly**: Simple commands with rich status information
 
-## 🚀 Quick Start
+## 🚀 Deploy on Railway
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/QhBfPq?referralCode=bonus)
+
+### Quick Setup Guide:
+
+1. **Create Telegram Bot**: 
+   - Message [@BotFather](https://t.me/BotFather) → `/newbot` → follow instructions
+   - Save the bot token for later
+
+2. **Get your User ID**:
+   - Message [@userinfobot](https://t.me/userinfobot) → it will show your ID
+   - Save this ID for user restriction
+
+3. **Deploy & Configure**:
+   - Click "Deploy on Railway" button above
+   - In Railway dashboard → Settings → Variables, add:
+     - `BOT_TOKEN` = your bot token from BotFather
+     - `OPENROUTER_API_KEY` = your OpenRouter API key
+     - `ALLOWED_USERS` = your user ID (optional, for access control)
+   - In Settings → Volumes, create volume with mount path `/app/data`
+
+4. **Setup Cursor cookies** (see [QUICK_SETUP.md](QUICK_SETUP.md) for detailed guide)
+
+## 🛠️ Local Development
 
 ### 1. Installation
 
@@ -23,13 +47,7 @@ pnpm install
 
 ### 2. Configuration
 
-Copy the example environment file and configure it:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your configuration:
+Create `.env` file:
 
 ```env
 # Required
@@ -39,7 +57,7 @@ OPENROUTER_API_KEY=your_openrouter_api_key_here
 # Optional: Repository access control
 ALLOWED_REPOS=https://github.com/user/repo1,https://github.com/user/repo2
 
-# Optional: User access control
+# Optional: User access control (get your ID from @userinfobot)
 ALLOWED_USERS=123456,789012
 ```
 
@@ -77,7 +95,7 @@ pnpm start
 | `OPENROUTER_API_KEY` | Yes | OpenRouter API key for AI functionality |
 | `ALLOWED_REPOS` | No | Comma-separated list of allowed repository URLs |
 | `ALLOWED_USERS` | No | Comma-separated list of allowed Telegram user IDs |
-| `DATABASE_PATH` | No | Database file path (defaults to 'bot.db') |
+| `DB_PATH` | No | Database file path (defaults to 'bot.db', Railway: '/app/data/bot.db') |
 
 ## 🛡️ Security
 
@@ -165,7 +183,18 @@ The bot integrates with:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
+## � Railway Deployment
+
+This project is fully configured for Railway deployment with persistent SQLite storage:
+
+- **One-click Deploy**: Use the Railway button above
+- **Persistent Database**: SQLite data stored in Railway volumes
+- **Zero Config**: Nixpacks handles the build automatically
+- **Scaling**: Single replica recommended for SQLite
+
+See [RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md) for detailed deployment instructions.
+
+## �📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -174,6 +203,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Cursor AI](https://cursor.com) for the amazing AI coding assistant
 - [Grammy](https://grammy.dev) for the Telegram bot framework
 - [OpenRouter](https://openrouter.ai) for AI API access
+- [Railway](https://railway.app) for seamless deployment
 
 ---
 

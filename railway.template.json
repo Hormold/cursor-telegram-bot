@@ -1,0 +1,29 @@
+{
+  "name": "Cursor AI Telegram Bot",
+  "description": "Telegram bot for managing Cursor AI Background Composers with SQLite database",
+  "tags": ["telegram", "cursor", "ai", "bot", "sqlite"],
+  "logo": "https://cursor.com/favicon.ico",
+  "repository": "https://github.com/hormold/cursor-telegram-bot",
+  "variables": {
+    "BOT_TOKEN": {
+      "description": "Telegram bot token from @BotFather",
+      "required": true
+    },
+    "OPENROUTER_API_KEY": {
+      "description": "OpenRouter API key for AI functionality",
+      "required": true
+    },
+    "ALLOWED_USERS": {
+      "description": "Comma-separated list of allowed Telegram user IDs (get from @userinfobot)",
+      "required": false
+    },
+    "ALLOWED_REPOS": {
+      "description": "Comma-separated list of allowed repository URLs",
+      "required": false
+    },
+    "DB_PATH": {
+      "description": "Database file path",
+      "default": "/app/data/bot.db"
+    }
+  }
+}
