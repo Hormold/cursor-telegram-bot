@@ -15,25 +15,13 @@ A powerful Telegram bot for managing Cursor AI Background Composers with intelli
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/QhBfPq?referralCode=bonus)
 
-### Quick Setup Guide:
+### Quick Setup:
 
-1. **Create Telegram Bot**: 
-   - Message [@BotFather](https://t.me/BotFather) → `/newbot` → follow instructions
-   - Save the bot token for later
-
-2. **Get your User ID**:
-   - Message [@userinfobot](https://t.me/userinfobot) → it will show your ID
-   - Save this ID for user restriction
-
-3. **Deploy & Configure**:
-   - Click "Deploy on Railway" button above
-   - In Railway dashboard → Settings → Variables, add:
-     - `BOT_TOKEN` = your bot token from BotFather
-     - `OPENROUTER_API_KEY` = your OpenRouter API key
-     - `ALLOWED_USERS` = your user ID (optional, for access control)
-   - In Settings → Volumes, create volume with mount path `/app/data`
-
-4. **Setup Cursor cookies** (see [QUICK_SETUP.md](QUICK_SETUP.md) for detailed guide)
+1. **Create Telegram Bot**: Message [@BotFather](https://t.me/BotFather) → `/newbot`
+2. **Get your User ID**: Message [@userinfobot](https://t.me/userinfobot) 
+3. **Deploy**: Click Railway button, add your `BOT_TOKEN` and `OPENROUTER_API_KEY`
+4. **Add Volume**: In Railway → Settings → Volumes → mount path `/app/data`
+5. **Setup Cursor cookies**: Send your `WorkosCursorSessionToken` to the bot
 
 ## 🛠️ Local Development
 
@@ -181,18 +169,6 @@ The bot integrates with:
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## � Railway Deployment
-
-This project is fully configured for Railway deployment with persistent SQLite storage:
-
-- **One-click Deploy**: Use the Railway button above
-- **Persistent Database**: SQLite data stored in Railway volumes
-- **Zero Config**: Nixpacks handles the build automatically
-- **Scaling**: Single replica recommended for SQLite
-
-See [RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md) for detailed deployment instructions.
 
 ## �📄 License
 
