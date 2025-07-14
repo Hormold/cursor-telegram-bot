@@ -20,7 +20,7 @@ A powerful Telegram bot for managing Cursor AI Background Composers with intelli
 1. **Create Telegram Bot**: Message [@BotFather](https://t.me/BotFather) → `/newbot`
 2. **Get your User ID**: Message [@userinfobot](https://t.me/userinfobot) 
 3. **Deploy**: Click Railway button, add your `BOT_TOKEN` and `OPENROUTER_API_KEY`
-4. **Add Volume**: In Railway → Settings → Volumes → mount path `/app/data`
+4. **Volume**: Railway will auto-create volume for `/app/data` (SQLite database storage)
 5. **Setup Cursor cookies**: Send your `WorkosCursorSessionToken` to the bot
 
 ## 🛠️ Local Development
@@ -41,6 +41,9 @@ Create `.env` file:
 # Required
 BOT_TOKEN=your_telegram_bot_token_here
 OPENROUTER_API_KEY=your_openrouter_api_key_here
+
+# Optional: OpenRouter model (default: openai/gpt-4.1)
+OPENROUTER_MODEL=openai/gpt-4.1
 
 # Optional: Repository access control
 ALLOWED_REPOS=https://github.com/user/repo1,https://github.com/user/repo2
@@ -81,6 +84,7 @@ pnpm start
 |----------|----------|-------------|
 | `BOT_TOKEN` | Yes | Telegram bot token from @BotFather |
 | `OPENROUTER_API_KEY` | Yes | OpenRouter API key for AI functionality |
+| `OPENROUTER_MODEL` | No | OpenRouter model (default: 'openai/gpt-4.1') |
 | `ALLOWED_REPOS` | No | Comma-separated list of allowed repository URLs |
 | `ALLOWED_USERS` | No | Comma-separated list of allowed Telegram user IDs |
 | `DB_PATH` | No | Database file path (defaults to 'bot.db', Railway: '/app/data/bot.db') |

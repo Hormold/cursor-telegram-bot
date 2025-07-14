@@ -1,5 +1,11 @@
 {
   "deploy": {
     "numReplicas": 1
-  }
+  },
+  "volumes": [
+    {
+      "name": "sqlite-data",
+      "mountPath": "/app/data"
+    }
+  ]
 }
