@@ -1,0 +1,39 @@
+{
+  "name": "cursor-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for managing Cursor AI background composers",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc && node dist/index.js",
+    "dev:watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cursor",
+    "ai",
+    "telegram",
+    "bot",
+    "background-composer"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.19.7",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^1.2.22",
+    "@ai-sdk/openai": "^1.3.23",
+    "@openrouter/ai-sdk-provider": "0.7.2",
+    "@types/better-sqlite3": "^7.6.13",
+    "ai": "4.3.17",
+    "better-sqlite3": "^12.2.0",
+    "dotenv": "^16.6.1",
+    "grammy": "^1.37.0",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.104.0",
+    "zod": "^3.25.76"
+  }
+}
