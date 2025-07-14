@@ -14,6 +14,7 @@ import {
   ArchiveBackgroundComposerRequest,
   BackgroundComposer,
   ConversationMessage,
+  ConversationImage,
   MessageType,
   BackgroundComposerSource,
   DevcontainerStartingPoint,
@@ -231,10 +232,15 @@ export class CursorApi {
    * 
    * @param {string} text - Message text
    * @param {MessageType} type - Message type (HUMAN or AI)
+   * @param {ConversationImage[]} images - Optional images array
    * @returns {ConversationMessage} Formatted message
    */
-  createMessage(text: string, type: MessageType = MessageType.HUMAN): ConversationMessage {
-    return {
+  createMessage(
+    text: string, 
+    type: MessageType = MessageType.HUMAN,
+    images?: ConversationImage[]
+  ): ConversationMessage {
+    const message: ConversationMessage = {
       text,
       type,
       richText: JSON.stringify({
@@ -269,6 +275,12 @@ export class CursorApi {
         },
       }),
     };
+
+    if (images && images.length > 0) {
+      message.images = images;
+    }
+
+    return message;
   }
 
   /**
@@ -289,13 +301,15 @@ export class CursorApi {
    * @param {string} task - Task for AI
    * @param {string} branch - Branch (default 'main')
    * @param {SupportedModel | string} modelName - AI model (default 'claude-4-sonnet-thinking')
+   * @param {ConversationImage[]} images - Optional images array
    * @returns {Partial<StartBackgroundComposerRequest>} Basic configuration
    */
   createBaseComposerConfig(
     repoUrl: string,
     task: string,
     branch: string = 'main',
-    modelName: SupportedModel | string = SupportedModel.CLAUDE_4_SONNET_THINKING
+    modelName: SupportedModel | string = SupportedModel.CLAUDE_4_SONNET_THINKING,
+    images?: ConversationImage[]
   ): Partial<StartBackgroundComposerRequest> {
     const bcId = this.generateBcId();
     
@@ -314,7 +328,7 @@ export class CursorApi {
       autoBranch: true,
       returnImmediately: true,
       repoUrl,
-      conversationHistory: [this.createMessage(task)],
+      conversationHistory: [this.createMessage(task, MessageType.HUMAN, images)],
       source: BackgroundComposerSource.WEBSITE,
       bcId,
       addInitialMessageToResponses: true,
@@ -329,15 +343,17 @@ export class CursorApi {
    * @param {string} task - Task for AI
    * @param {string} branch - Branch (default 'main')
    * @param {SupportedModel | string} modelName - AI model (default 'claude-4-sonnet-thinking')
+   * @param {ConversationImage[]} images - Optional images array
    * @returns {Promise<StartBackgroundComposerResponse>} Information about the created composer
    */
   async startSimpleComposer(
     repoUrl: string,
     task: string,
     branch: string = 'main',
-    modelName: SupportedModel | string = SupportedModel.CLAUDE_4_SONNET_THINKING
+    modelName: SupportedModel | string = SupportedModel.CLAUDE_4_SONNET_THINKING,
+    images?: ConversationImage[]
   ): Promise<StartBackgroundComposerResponse> {
-    const config = this.createBaseComposerConfig(repoUrl, task, branch, modelName);
+    const config = this.createBaseComposerConfig(repoUrl, task, branch, modelName, images);
     
     return this.startBackgroundComposer(config as StartBackgroundComposerRequest);
   }

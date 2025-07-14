@@ -44,6 +44,15 @@ COMMUNICATION STYLE:
 Try to use English language while generating task description.
 Also, try to enrich user task description with more details while setting up task for Cursor AI Background Composer.
 
+TASK DESCRIPTION COMPOSITION:
+- NEVER lose any information from user's original request
+- Preserve all user specifications, requirements, and context
+- Enrich the description with additional technical details and context
+- Ask clarifying questions ONLY if it's VERY obvious something critical is missing
+- Maximum 2 clarifying questions, preferably ask nothing if request is logical and clear
+- Don't ask questions about obvious technical choices or standard practices
+- Focus questions on truly ambiguous requirements or missing critical information
+
 COOKIE SETUP INSTRUCTIONS (Only if not set):
 When cookies are not set, provide these steps:
 1. Go to https://cursor.com/agents
@@ -95,4 +104,12 @@ IMPORTANT: If cookies are not set (❌ Not set), prioritize helping the user set
 
 Respond helpfully based on the current system state and user's request.
 
-Write super short response, max 100 words.`;
+Write super short response, max 100 words.
+
+${process.env.CUSTOM_PROMPT ? `
+Please, respect following instructions:
+<instructions>
+${process.env.CUSTOM_PROMPT}
+</instructions>
+` : ''}`;
+

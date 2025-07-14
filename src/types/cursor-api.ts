@@ -109,10 +109,22 @@ export enum MessageType {
   AI = 'MESSAGE_TYPE_AI'
 }
 
+export interface ImageDimension {
+  width: number;
+  height: number;
+}
+
+export interface ConversationImage {
+  data: string; // base64 encoded image
+  dimension: ImageDimension;
+  uuid: string;
+}
+
 export interface ConversationMessage {
   text: string;
   type: MessageType;
   richText?: string;
+  images?: ConversationImage[];
 }
 
 // Model configuration

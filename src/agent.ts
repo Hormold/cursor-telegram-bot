@@ -7,6 +7,7 @@ import { Database } from './database';
 import { SupportedModel } from './types/cursor-api';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generatePrompt } from './prompt';
+import { getImagesFromCache, clearImagesFromCache } from './image-cache';
 const apiKey = process.env.OPENROUTER_API_KEY;
 const openrouterModel = process.env.OPENROUTER_MODEL || 'openai/gpt-4.1';
 const openrouter = createOpenRouter({
@@ -134,9 +135,12 @@ function createToolsWithContext(context: AgentContext): ToolSet {
             };
           }
 
+          // Get images from cache
+          const images = getImagesFromCache(context.userId, context.chatId);
+          
           // Create fresh CursorApi instance and start the task
           const cursorApi = new CursorApi({ cookies });
-          const result = await cursorApi.startSimpleComposer(repoUrl, taskDescription, branch, model);
+          const result = await cursorApi.startSimpleComposer(repoUrl, taskDescription, branch, model, images.length > 0 ? images : undefined);
           
           // Update context with validated instance
           context.cursorApi = cursorApi;
@@ -151,11 +155,14 @@ function createToolsWithContext(context: AgentContext): ToolSet {
             status: result.composer.status
           });
 
+          // Clear images from cache after successful task creation
+          clearImagesFromCache(context.userId, context.chatId);
+
           return {
             success: true,
             composerId: result.composer.bcId,
             taskId,
-            message: `Task started in ${repoUrl} with model ${model}: ${taskDescription}`
+            message: `Task started in ${repoUrl} with model ${model}: ${taskDescription}${images.length > 0 ? ` (${images.length} image${images.length > 1 ? 's' : ''} attached)` : ''}`
           };
         } catch (error) {
           return { 

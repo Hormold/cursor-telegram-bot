@@ -10,6 +10,9 @@ A powerful Telegram bot for managing Cursor AI Background Composers with intelli
 - 💬 **Interactive Interface**: Telegram buttons for external links and actions
 - 🛡️ **Security**: Repository and user access control via environment variables
 - 📱 **User-friendly**: Simple commands with rich status information
+- 🎤 **Voice Messages**: AI-powered voice message transcription using Gemini
+- 📸 **Image Support**: Send photos to include in Cursor AI tasks (cached for 3 minutes)
+- ⚙️ **Customizable**: Custom prompts and instructions via environment variables
 
 ### Quick Setup:
 
@@ -26,7 +29,7 @@ A powerful Telegram bot for managing Cursor AI Background Composers with intelli
 ```bash
 git clone https://github.com/hormold/cursor-telegram-bot
 cd cursor-telegram-bot
-pnpm install
+pnpm install  # Installs all dependencies including sharp for image processing
 ```
 
 ### 2. Configuration
@@ -46,6 +49,12 @@ ALLOWED_REPOS=https://github.com/user/repo1,https://github.com/user/repo2
 
 # Optional: User access control (get your ID from @userinfobot)
 ALLOWED_USERS=123456,789012
+
+# Optional: Google Gemini API key for voice message transcription
+GOOGLE_GENERATIVE_AI_API_KEY=your_google_api_key_here
+
+# Optional: Custom prompt for additional instructions
+CUSTOM_PROMPT="Focus on repos with skipcalls prefix if user asks to add something"
 ```
 
 ### 3. Setup Cursor API Cookies
@@ -73,6 +82,7 @@ pnpm start
 | `/tasks` | View your active tasks |
 | `/cookies` | Get cookie setup instructions |
 | `/help` | Show available commands |
+| 🎤 **Voice Messages** | Send voice messages for AI transcription and processing |
 
 ## 🔧 Environment Variables
 
@@ -84,6 +94,8 @@ pnpm start
 | `ALLOWED_REPOS` | No | Comma-separated list of allowed repository URLs |
 | `ALLOWED_USERS` | No | Comma-separated list of allowed Telegram user IDs |
 | `DB_PATH` | No | Database file path (defaults to 'bot.db', Railway: '/app/data/bot.db') |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | No | Google Gemini API key for voice message transcription and image processing |
+| `CUSTOM_PROMPT` | No | Custom instructions to add to the bot's system prompt |
 
 ## 🛡️ Security
 
@@ -99,6 +111,26 @@ pnpm start
 ```
 User: Add authentication to my React app
 Bot: ✅ Task started successfully!
+     🔗 [Open in Cursor] (button)
+```
+
+### Voice Message Support
+
+```
+User: [voice message] "Start a new task to add dark mode to my app"
+Bot: 🎤 Transcribing voice message...
+     ✅ Task started successfully!
+     🔗 [Open in Cursor] (button)
+```
+
+### Image Support
+
+```
+User: [sends photo of UI mockup]
+Bot: 📸 Photo received and saved to cache (1 image total). I'll include it when you create a task.
+
+User: Create a React component based on this design
+Bot: ✅ Task started successfully! (1 image attached)
      🔗 [Open in Cursor] (button)
 ```
 
