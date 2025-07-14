@@ -11,7 +11,15 @@ A powerful Telegram bot for managing Cursor AI Background Composers with intelli
 - 🛡️ **Security**: Repository and user access control via environment variables
 - 📱 **User-friendly**: Simple commands with rich status information
 
-## 🚀 Quick Start
+### Quick Setup:
+
+1. **Create Telegram Bot**: Message [@BotFather](https://t.me/BotFather) → `/newbot`
+2. **Get your User ID**: Message [@userinfobot](https://t.me/userinfobot) 
+3. **Deploy**: Click Railway button, add your `BOT_TOKEN` and `OPENROUTER_API_KEY`
+4. **Volume**: Railway will auto-create volume for `/app/data` (SQLite database storage)
+5. **Setup Cursor cookies**: Send your `WorkosCursorSessionToken` to the bot
+
+## 🛠️ Local Development
 
 ### 1. Installation
 
@@ -23,23 +31,20 @@ pnpm install
 
 ### 2. Configuration
 
-Copy the example environment file and configure it:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your configuration:
+Create `.env` file:
 
 ```env
 # Required
 BOT_TOKEN=your_telegram_bot_token_here
 OPENROUTER_API_KEY=your_openrouter_api_key_here
 
+# Optional: OpenRouter model (default: openai/gpt-4.1)
+OPENROUTER_MODEL=openai/gpt-4.1
+
 # Optional: Repository access control
 ALLOWED_REPOS=https://github.com/user/repo1,https://github.com/user/repo2
 
-# Optional: User access control
+# Optional: User access control (get your ID from @userinfobot)
 ALLOWED_USERS=123456,789012
 ```
 
@@ -75,9 +80,10 @@ pnpm start
 |----------|----------|-------------|
 | `BOT_TOKEN` | Yes | Telegram bot token from @BotFather |
 | `OPENROUTER_API_KEY` | Yes | OpenRouter API key for AI functionality |
+| `OPENROUTER_MODEL` | No | OpenRouter model (default: 'openai/gpt-4.1') |
 | `ALLOWED_REPOS` | No | Comma-separated list of allowed repository URLs |
 | `ALLOWED_USERS` | No | Comma-separated list of allowed Telegram user IDs |
-| `DATABASE_PATH` | No | Database file path (defaults to 'bot.db') |
+| `DB_PATH` | No | Database file path (defaults to 'bot.db', Railway: '/app/data/bot.db') |
 
 ## 🛡️ Security
 
@@ -163,9 +169,8 @@ The bot integrates with:
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
-## 📄 License
+## �📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -174,6 +179,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Cursor AI](https://cursor.com) for the amazing AI coding assistant
 - [Grammy](https://grammy.dev) for the Telegram bot framework
 - [OpenRouter](https://openrouter.ai) for AI API access
+- [Railway](https://railway.app) for seamless deployment
 
 ---
 

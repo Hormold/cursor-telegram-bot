@@ -1,5 +1,7 @@
 import BetterSqlite3 from 'better-sqlite3';
 import { CoreMessage } from 'ai';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface User {
   id: number;
@@ -67,8 +69,15 @@ export interface Config {
 export class Database {
   private db: BetterSqlite3.Database;
 
-  constructor(path: string = 'bot.db') {
-    this.db = new BetterSqlite3(path);
+  constructor(dbPath: string = process.env.DB_PATH || 'bot.db') {
+    // Ensure directory exists for the database file
+    const dbDir = path.dirname(dbPath);
+    
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+    
+    this.db = new BetterSqlite3(dbPath);
     this.init();
   }
 

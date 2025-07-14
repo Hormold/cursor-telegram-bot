@@ -8,6 +8,7 @@ import { SupportedModel } from './types/cursor-api';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generatePrompt } from './prompt';
 const apiKey = process.env.OPENROUTER_API_KEY;
+const openrouterModel = process.env.OPENROUTER_MODEL || 'openai/gpt-4.1';
 const openrouter = createOpenRouter({
   apiKey,
 });
@@ -425,7 +426,7 @@ ${userTasks.length > 0 ? userTasks.map(t =>
     try {
       console.log(`Get user message: ${message}`);
       const result = await generateText({
-        model: openrouter.chat('openai/gpt-4.1'),
+        model: openrouter.chat(openrouterModel),
         system: systemPrompt,
         messages: conversationHistory,
         tools: this.tools,
