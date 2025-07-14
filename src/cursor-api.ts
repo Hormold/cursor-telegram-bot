@@ -19,6 +19,7 @@ import {
   DevcontainerStartingPoint,
   ModelDetails,
   GetUserInfoResponse,
+  SupportedModel,
 } from './types/cursor-api';
 
 export class CursorApi {
@@ -287,14 +288,14 @@ export class CursorApi {
    * @param {string} repoUrl - Repository URL
    * @param {string} task - Task for AI
    * @param {string} branch - Branch (default 'main')
-   * @param {string} modelName - AI model (default 'o3')
+   * @param {SupportedModel | string} modelName - AI model (default 'claude-4-sonnet-thinking')
    * @returns {Partial<StartBackgroundComposerRequest>} Basic configuration
    */
   createBaseComposerConfig(
     repoUrl: string,
     task: string,
     branch: string = 'main',
-    modelName: string = 'claude-4-sonnet-thinking'
+    modelName: SupportedModel | string = SupportedModel.CLAUDE_4_SONNET_THINKING
   ): Partial<StartBackgroundComposerRequest> {
     const bcId = this.generateBcId();
     
@@ -327,14 +328,14 @@ export class CursorApi {
    * @param {string} repoUrl - Repository URL
    * @param {string} task - Task for AI
    * @param {string} branch - Branch (default 'main')
-   * @param {string} modelName - AI model (default 'o3')
+   * @param {SupportedModel | string} modelName - AI model (default 'claude-4-sonnet-thinking')
    * @returns {Promise<StartBackgroundComposerResponse>} Information about the created composer
    */
   async startSimpleComposer(
     repoUrl: string,
     task: string,
     branch: string = 'main',
-    modelName: string = 'o3'
+    modelName: SupportedModel | string = SupportedModel.CLAUDE_4_SONNET_THINKING
   ): Promise<StartBackgroundComposerResponse> {
     const config = this.createBaseComposerConfig(repoUrl, task, branch, modelName);
     

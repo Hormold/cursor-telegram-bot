@@ -5,6 +5,12 @@ export interface CursorApiResponse<T> {
   success?: boolean;
 }
 
+// Supported AI models
+export enum SupportedModel {
+  CLAUDE_4_SONNET_THINKING = 'claude-4-sonnet-thinking',
+  O3 = 'o3'
+}
+
 // Repository types
 export interface Repository {
   installationId: string;
@@ -111,7 +117,7 @@ export interface ConversationMessage {
 
 // Model configuration
 export interface ModelDetails {
-  modelName: string;
+  modelName: SupportedModel | string;
   maxMode: boolean;
 }
 

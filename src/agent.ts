@@ -4,6 +4,7 @@ import { generateText, tool, ToolSet, CoreMessage } from 'ai';
 import { z } from 'zod';
 import CursorApi from './cursor-api';
 import { Database } from './database';
+import { SupportedModel } from './types/cursor-api';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generatePrompt } from './prompt';
 const apiKey = process.env.OPENROUTER_API_KEY;
@@ -108,13 +109,14 @@ function createToolsWithContext(context: AgentContext): ToolSet {
           }),
 
     startTask: tool({
-      description: 'Start a new Cursor AI task in a repository',
+      description: 'Start a new Cursor AI task in a repository. Available models: claude-4-sonnet-thinking (default), o3',
       parameters: z.object({
         repoUrl: z.string().describe('Repository URL'),
         taskDescription: z.string().describe('Task description for AI'),
-        branch: z.string().default('main').describe('Branch name (default: main)')
+        branch: z.string().default('main').describe('Branch name (default: main)'),
+        model: z.enum([SupportedModel.CLAUDE_4_SONNET_THINKING, SupportedModel.O3]).default(SupportedModel.CLAUDE_4_SONNET_THINKING).describe('AI model to use (default: claude-4-sonnet-thinking)')
       }),
-      execute: async ({ repoUrl, taskDescription, branch }: { repoUrl: string; taskDescription: string; branch?: string }) => {
+      execute: async ({ repoUrl, taskDescription, branch, model }: { repoUrl: string; taskDescription: string; branch?: string; model?: SupportedModel }) => {
         try {
           const cookies = await context.db.getCookies();
           if (!cookies) {
@@ -133,7 +135,7 @@ function createToolsWithContext(context: AgentContext): ToolSet {
 
           // Create fresh CursorApi instance and start the task
           const cursorApi = new CursorApi({ cookies });
-          const result = await cursorApi.startSimpleComposer(repoUrl, taskDescription, branch);
+          const result = await cursorApi.startSimpleComposer(repoUrl, taskDescription, branch, model);
           
           // Update context with validated instance
           context.cursorApi = cursorApi;
@@ -152,7 +154,7 @@ function createToolsWithContext(context: AgentContext): ToolSet {
             success: true,
             composerId: result.composer.bcId,
             taskId,
-            message: `Task started in ${repoUrl}: ${taskDescription}`
+            message: `Task started in ${repoUrl} with model ${model}: ${taskDescription}`
           };
         } catch (error) {
           return { 
@@ -418,7 +420,6 @@ ${userTasks.length > 0 ? userTasks.map(t =>
 
     const systemPrompt = generatePrompt(systemContext, this.tools);
 
-    console.log(JSON.stringify(conversationHistory, null, 2));
  
 
     try {
@@ -431,7 +432,6 @@ ${userTasks.length > 0 ? userTasks.map(t =>
         maxSteps: 20,
         onStepFinish: async (step) => {
           this.currentStepNumber++;
-          console.log(`Step ${this.currentStepNumber} finished:`, step);
           
           // Save step data to database
           await this.saveStepData({

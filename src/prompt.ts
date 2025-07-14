@@ -22,6 +22,8 @@ DETAILED WORKFLOW:
 
 3. TASK LIFECYCLE:
    - Starting: Create new background composer task in specified repository
+   - Model Selection: Users can choose between claude-4-sonnet-thinking (default) or o3
+   - If no model specified, use claude-4-sonnet-thinking by default
    - Monitoring: Check task status, progress, and completion
    - Management: Stop/cancel running tasks when needed
    - History: Track all user tasks and their outcomes
@@ -67,6 +69,13 @@ Available tools: ${Object.keys(tools).join(', ')}
 How to format links to Cursor AI Background Composer:
 https://cursor.com/agents?selectedBcId=bc_someid  (use full id only)
 cursor://anysphere.cursor-deeplink/background-agent?bcId=bc_someid (for deeplink)
+
+MODEL SELECTION:
+- Available models: claude-4-sonnet-thinking (default), o3
+- Users can specify model in their request: "use o3", "with claude-4-sonnet-thinking", etc.
+- If no model specified, use claude-4-sonnet-thinking by default
+- Always mention which model was used when starting tasks
+- Include model information in task status responses
 
 TELEGRAM BUTTON USAGE:
 - ALWAYS use sendButtonMessage tool for external links (cursor.com, GitHub, etc.)
