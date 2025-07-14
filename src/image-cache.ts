@@ -61,8 +61,11 @@ export function saveImagesToCache(userId: number, chatId: number, images: Conver
       timestamp: Date.now()
     };
     
+    const jsonSize = JSON.stringify(cacheData).length;
+    console.log(`📸 Saving ${images.length} images to cache file ${filePath} (${Math.round(jsonSize / 1024)}KB)`);
+    
     fs.writeFileSync(filePath, JSON.stringify(cacheData, null, 2));
-    console.log(`Saved ${images.length} images to cache for user ${userId} in chat ${chatId}`);
+    console.log(`📸 Successfully saved ${images.length} images to cache for user ${userId} in chat ${chatId}`);
   } catch (error) {
     console.error('Error saving images to cache:', error);
   }
@@ -75,20 +78,28 @@ export function getImagesFromCache(userId: number, chatId: number): Conversation
   
   try {
     if (!fs.existsSync(filePath)) {
+      console.log(`📸 No cache file found for user ${userId} in chat ${chatId}`);
       return [];
     }
     
     const stats = fs.statSync(filePath);
     const now = Date.now();
+    const age = now - stats.mtime.getTime();
+    
+    console.log(`📸 Cache file age: ${Math.round(age / 1000)}s (TTL: ${CACHE_TTL / 1000}s)`);
     
     // Check if expired
-    if (now - stats.mtime.getTime() > CACHE_TTL) {
+    if (age > CACHE_TTL) {
+      console.log(`📸 Cache expired, removing file`);
       fs.unlinkSync(filePath);
       return [];
     }
     
     const cacheData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    return cacheData.images || [];
+    const images = cacheData.images || [];
+    console.log(`📸 Successfully loaded ${images.length} images from cache`);
+    
+    return images;
   } catch (error) {
     console.error('Error reading images from cache:', error);
     return [];
@@ -102,8 +113,14 @@ export function clearImagesFromCache(userId: number, chatId: number) {
   
   try {
     if (fs.existsSync(filePath)) {
+      const stats = fs.statSync(filePath);
+      const fileSize = Math.round(stats.size / 1024);
+      console.log(`📸 Clearing cache file ${filePath} (${fileSize}KB)`);
+      
       fs.unlinkSync(filePath);
-      console.log(`Cleared image cache for user ${userId} in chat ${chatId}`);
+      console.log(`📸 Successfully cleared image cache for user ${userId} in chat ${chatId}`);
+    } else {
+      console.log(`📸 No cache file to clear for user ${userId} in chat ${chatId}`);
     }
   } catch (error) {
     console.error('Error clearing images from cache:', error);

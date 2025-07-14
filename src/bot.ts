@@ -339,11 +339,14 @@ bot.on('message:photo', async (ctx) => {
     const photoBuffer = Buffer.from(await response.arrayBuffer());
     
     // Convert to Cursor format
+    console.log(`📸 Converting Telegram photo ${photo.file_id} to Cursor format`);
     const cursorImage = await convertTelegramImageToCursorFormat(photoBuffer, photo.file_id);
+    console.log(`📸 Converted image: ${cursorImage.dimension.width}x${cursorImage.dimension.height}, ${Math.round(cursorImage.data.length / 1024)}KB`);
     
     // Get existing images from cache and add new one
     const existingImages = getImagesFromCache(ctx.from!.id, ctx.chat!.id);
     const allImages = [...existingImages, cursorImage];
+    console.log(`📸 Total images in cache: ${allImages.length} (${existingImages.length} existing + 1 new)`);
     
     // Save to cache
     saveImagesToCache(ctx.from!.id, ctx.chat!.id, allImages);

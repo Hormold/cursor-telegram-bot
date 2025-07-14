@@ -123,12 +123,17 @@ export async function convertTelegramImageToCursorFormat(
   fileBuffer: Buffer,
   telegramFileId: string
 ): Promise<ConversationImage> {
+  console.log(`📸 Converting ${fileBuffer.length} bytes image to PNG format`);
+  
   // Convert image to PNG and get dimensions
   const pngBuffer = await sharp(fileBuffer)
     .png()
     .toBuffer();
   
   const metadata = await sharp(pngBuffer).metadata();
+  console.log(`📸 PNG conversion complete: ${metadata.width}x${metadata.height}, ${pngBuffer.length} bytes`);
+  
+  const uuid = `tg-${telegramFileId}-${Date.now()}`;
   
   return {
     data: pngBuffer.toString('base64'),
@@ -136,6 +141,6 @@ export async function convertTelegramImageToCursorFormat(
       width: metadata.width || 0,
       height: metadata.height || 0,
     },
-    uuid: `tg-${telegramFileId}-${Date.now()}`,
+    uuid,
   };
 }

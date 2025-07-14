@@ -196,6 +196,19 @@ export class CursorApi {
   async startBackgroundComposer(
     request: StartBackgroundComposerRequest
   ): Promise<StartBackgroundComposerResponse> {
+    // Log payload info (without actual image data to avoid spam)
+    const payloadInfo = {
+      bcId: request.bcId,
+      repoUrl: request.repoUrl,
+      conversationHistory: request.conversationHistory?.map(msg => ({
+        text: msg.text.substring(0, 100) + (msg.text.length > 100 ? '...' : ''),
+        type: msg.type,
+        hasImages: !!msg.images,
+        imageCount: msg.images?.length || 0
+      }))
+    };
+    console.log(`📤 Sending request to Cursor API:`, payloadInfo);
+    
     return this.request<StartBackgroundComposerResponse>(
       '/api/auth/startBackgroundComposerFromSnapshot',
       {
@@ -353,7 +366,14 @@ export class CursorApi {
     modelName: SupportedModel | string = SupportedModel.CLAUDE_4_SONNET_THINKING,
     images?: ConversationImage[]
   ): Promise<StartBackgroundComposerResponse> {
+    console.log(`🔧 Creating Cursor config with ${images?.length || 0} images`);
     const config = this.createBaseComposerConfig(repoUrl, task, branch, modelName, images);
+    
+    // Log the conversation history to see if images are included
+    if (config.conversationHistory && config.conversationHistory.length > 0) {
+      const firstMessage = config.conversationHistory[0];
+      console.log(`📝 First message has ${firstMessage.images?.length || 0} images attached`);
+    }
     
     return this.startBackgroundComposer(config as StartBackgroundComposerRequest);
   }

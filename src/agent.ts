@@ -137,10 +137,21 @@ function createToolsWithContext(context: AgentContext): ToolSet {
 
           // Get images from cache
           const images = getImagesFromCache(context.userId, context.chatId);
+          console.log(`📸 Found ${images.length} images in cache for user ${context.userId} in chat ${context.chatId}`);
+          
+          if (images.length > 0) {
+            console.log(`📸 Images details:`, images.map(img => ({
+              uuid: img.uuid,
+              dimensions: `${img.dimension.width}x${img.dimension.height}`,
+              dataSize: `${Math.round(img.data.length / 1024)}KB`
+            })));
+          }
           
           // Create fresh CursorApi instance and start the task
           const cursorApi = new CursorApi({ cookies });
+          console.log(`🚀 Starting Cursor task with ${images.length} images attached`);
           const result = await cursorApi.startSimpleComposer(repoUrl, taskDescription, branch, model, images.length > 0 ? images : undefined);
+          console.log(`✅ Cursor task started successfully: ${result.composer.bcId}`);
           
           // Update context with validated instance
           context.cursorApi = cursorApi;
@@ -156,6 +167,7 @@ function createToolsWithContext(context: AgentContext): ToolSet {
           });
 
           // Clear images from cache after successful task creation
+          console.log(`🧹 Clearing ${images.length} images from cache after successful task creation`);
           clearImagesFromCache(context.userId, context.chatId);
 
           return {
