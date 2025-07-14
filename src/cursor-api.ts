@@ -35,7 +35,7 @@ export class CursorApi {
   }
 
   /**
-   * Общий метод для выполнения HTTP запросов
+   * General method for making HTTP requests
    * @private
    */
   private async request<T>(
@@ -97,10 +97,10 @@ export class CursorApi {
   }
 
   /**
-   * Получить информацию о текущем пользователе
-   * Проверяет авторизацию и возвращает информацию о пользователе
+   * Get current user information
+   * Checks authentication and returns user information
    * 
-   * @returns {Promise<GetUserInfoResponse>} Информация о пользователе
+   * @returns {Promise<GetUserInfoResponse>} User information
    */
   async getUserInfo(): Promise<GetUserInfoResponse> {
     return this.request<GetUserInfoResponse>(
@@ -112,10 +112,10 @@ export class CursorApi {
   }
 
   /**
-   * Получить все установки GitHub с репозиториями
-   * Возвращает список всех подключенных GitHub установок с их репозиториями
+   * Get all GitHub installations with repositories
+   * Returns list of all connected GitHub installations with their repositories
    * 
-   * @returns {Promise<GitHubInstallationsResponse>} Список установок GitHub
+   * @returns {Promise<GitHubInstallationsResponse>} List of GitHub installations
    */
   async getGitHubInstallations(): Promise<GitHubInstallationsResponse> {
     return this.request<GitHubInstallationsResponse>(
@@ -128,11 +128,11 @@ export class CursorApi {
   }
 
   /**
-   * Получить все репозитории для конкретной установки
-   * Используется для получения полного списка репозиториев в установке с пагинацией
+   * Get all repositories for a specific installation
+   * Used to get the complete list of repositories in an installation with pagination
    * 
-   * @param {FetchAllInstallationReposRequest} request - Параметры запроса
-   * @returns {Promise<FetchAllInstallationReposResponse>} Список репозиториев
+   * @param {FetchAllInstallationReposRequest} request - Request parameters
+   * @returns {Promise<FetchAllInstallationReposResponse>} List of repositories
    */
   async fetchAllInstallationRepos(
     request: FetchAllInstallationReposRequest
@@ -147,11 +147,11 @@ export class CursorApi {
   }
 
   /**
-   * Получить список веток репозитория
-   * Возвращает доступные ветки для указанного репозитория
+   * Get repository branches list
+   * Returns available branches for the specified repository
    * 
-   * @param {GetRepositoryBranchesRequest} request - Параметры запроса
-   * @returns {Promise<GetRepositoryBranchesResponse>} Список веток
+   * @param {GetRepositoryBranchesRequest} request - Request parameters
+   * @returns {Promise<GetRepositoryBranchesResponse>} List of branches
    */
   async getRepositoryBranches(
     request: GetRepositoryBranchesRequest
@@ -166,11 +166,11 @@ export class CursorApi {
   }
 
   /**
-   * Получить список всех background composers
-   * Возвращает список всех созданных background composers с их статусами
+   * Get list of all background composers
+   * Returns list of all created background composers with their statuses
    * 
-   * @param {ListBackgroundComposersRequest} request - Параметры запроса
-   * @returns {Promise<ListBackgroundComposersResponse>} Список composers
+   * @param {ListBackgroundComposersRequest} request - Request parameters
+   * @returns {Promise<ListBackgroundComposersResponse>} List of composers
    */
   async listBackgroundComposers(
     request: ListBackgroundComposersRequest = { n: 100, include_status: true }
@@ -185,11 +185,11 @@ export class CursorApi {
   }
 
   /**
-   * Создать и запустить новый background composer
-   * Запускает новый AI воркер для работы с репозиторием
+   * Create and start a new background composer
+   * Starts a new AI worker for working with the repository
    * 
-   * @param {StartBackgroundComposerRequest} request - Параметры запроса
-   * @returns {Promise<StartBackgroundComposerResponse>} Информация о созданном composer
+   * @param {StartBackgroundComposerRequest} request - Request parameters
+   * @returns {Promise<StartBackgroundComposerResponse>} Information about the created composer
    */
   async startBackgroundComposer(
     request: StartBackgroundComposerRequest
@@ -204,10 +204,10 @@ export class CursorApi {
   }
 
   /**
-   * Архивировать (отменить) background composer
-   * Останавливает и архивирует указанный background composer
+   * Archive (cancel) background composer
+   * Stops and archives the specified background composer
    * 
-   * @param {ArchiveBackgroundComposerRequest} request - Параметры запроса
+   * @param {ArchiveBackgroundComposerRequest} request - Request parameters
    * @returns {Promise<void>}
    */
   async archiveBackgroundComposer(
@@ -225,12 +225,12 @@ export class CursorApi {
   // Utility methods
 
   /**
-   * Создать простое сообщение для conversation history
-   * Хелпер для создания сообщений в правильном формате
+   * Create a simple message for conversation history
+   * Helper for creating messages in the correct format
    * 
-   * @param {string} text - Текст сообщения
-   * @param {MessageType} type - Тип сообщения (HUMAN или AI)
-   * @returns {ConversationMessage} Сформированное сообщение
+   * @param {string} text - Message text
+   * @param {MessageType} type - Message type (HUMAN or AI)
+   * @returns {ConversationMessage} Formatted message
    */
   createMessage(text: string, type: MessageType = MessageType.HUMAN): ConversationMessage {
     return {
@@ -271,24 +271,24 @@ export class CursorApi {
   }
 
   /**
-   * Генерировать уникальный ID для background composer
-   * Создает уникальный идентификатор в формате bc-uuid
+   * Generate unique ID for background composer
+   * Creates a unique identifier in the format bc-uuid
    * 
-   * @returns {string} Уникальный ID
+   * @returns {string} Unique ID
    */
   generateBcId(): string {
     return `bc-${crypto.randomUUID()}`;
   }
 
   /**
-   * Создать базовую конфигурацию для запуска composer
-   * Хелпер для создания стандартных параметров запуска
+   * Create basic configuration for launching composer
+   * Helper for creating standard launch parameters
    * 
-   * @param {string} repoUrl - URL репозитория
-   * @param {string} task - Задача для AI
-   * @param {string} branch - Ветка (по умолчанию 'main')
-   * @param {string} modelName - Модель AI (по умолчанию 'o3')
-   * @returns {Partial<StartBackgroundComposerRequest>} Базовая конфигурация
+   * @param {string} repoUrl - Repository URL
+   * @param {string} task - Task for AI
+   * @param {string} branch - Branch (default 'main')
+   * @param {string} modelName - AI model (default 'o3')
+   * @returns {Partial<StartBackgroundComposerRequest>} Basic configuration
    */
   createBaseComposerConfig(
     repoUrl: string,
@@ -321,14 +321,14 @@ export class CursorApi {
   }
 
   /**
-   * Запустить composer с простой задачей
-   * Упрощенный метод для быстрого запуска AI воркера
+   * Start composer with a simple task
+   * Simplified method for quickly launching an AI worker
    * 
-   * @param {string} repoUrl - URL репозитория
-   * @param {string} task - Задача для AI
-   * @param {string} branch - Ветка (по умолчанию 'main')
-   * @param {string} modelName - Модель AI (по умолчанию 'o3')
-   * @returns {Promise<StartBackgroundComposerResponse>} Информация о созданном composer
+   * @param {string} repoUrl - Repository URL
+   * @param {string} task - Task for AI
+   * @param {string} branch - Branch (default 'main')
+   * @param {string} modelName - AI model (default 'o3')
+   * @returns {Promise<StartBackgroundComposerResponse>} Information about the created composer
    */
   async startSimpleComposer(
     repoUrl: string,
@@ -342,10 +342,10 @@ export class CursorApi {
   }
 
   /**
-   * Получить активные composers
-   * Возвращает только активные (не архивированные) composers
+   * Get active composers
+   * Returns only active (not archived) composers
    * 
-   * @returns {Promise<BackgroundComposer[]>} Список активных composers
+   * @returns {Promise<BackgroundComposer[]>} List of active composers
    */
   async getActiveComposers(): Promise<BackgroundComposer[]> {
     const response = await this.listBackgroundComposers();
@@ -353,11 +353,11 @@ export class CursorApi {
   }
 
   /**
-   * Найти composer по ID
-   * Поиск конкретного composer по его ID
+   * Find composer by ID
+   * Search for a specific composer by its ID
    * 
-   * @param {string} bcId - ID composer
-   * @returns {Promise<BackgroundComposer | null>} Найденный composer или null
+   * @param {string} bcId - Composer ID
+   * @returns {Promise<BackgroundComposer | null>} Found composer or null
    */
   async findComposerById(bcId: string): Promise<BackgroundComposer | null> {
     const response = await this.listBackgroundComposers();
