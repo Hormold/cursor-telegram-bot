@@ -294,7 +294,7 @@ export class CursorApi {
     repoUrl: string,
     task: string,
     branch: string = 'main',
-    modelName: string = 'o3'
+    modelName: string = 'claude-4-sonnet-thinking'
   ): Partial<StartBackgroundComposerRequest> {
     const bcId = this.generateBcId();
     
