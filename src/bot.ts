@@ -3,6 +3,7 @@ import { Bot } from 'grammy';
 import { Database } from './database';
 import CursorApi from './cursor-api';
 import Agent from './agent';
+import { BackgroundComposerStatus } from './types/cursor-api';
 
 const bot = new Bot(process.env.BOT_TOKEN || '');
 const db = new Database();
@@ -54,23 +55,71 @@ async function monitorTasks() {
       const oldStatus = task.status;
       const newStatus = composer.status;
 
+      const keyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: '🔍 Check Task Details',
+              url: `https://cursor.com/agents?selectedBcId=${task.composer_id}`
+            },
+            {
+              text: '📁 Open Repository',
+              url: task.repo_url
+            }
+          ]
+        ]
+      };
+
       if (oldStatus !== newStatus) {
         await db.updateTask(task.id, newStatus);
         
         // Notify user if task completed or failed
-        if (newStatus === 'BACKGROUND_COMPOSER_STATUS_COMPLETED') {
+        if (newStatus === BackgroundComposerStatus.FINISHED) {
+          
+          
           await bot.api.sendMessage(
             task.chat_id,
-            `✅ Task completed!\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
-            { parse_mode: 'Markdown' }
+            `✅ *Task completed!*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
+            { 
+              parse_mode: 'Markdown',
+              reply_markup: keyboard
+            }
           );
-        } else if (newStatus === 'BACKGROUND_COMPOSER_STATUS_FAILED') {
+        } else if (newStatus === BackgroundComposerStatus.ERROR) {
           await bot.api.sendMessage(
             task.chat_id,
-            `❌ Task failed!\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
-            { parse_mode: 'Markdown' }
+            `❌ *Task failed!*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
+            { 
+              parse_mode: 'Markdown',
+              reply_markup: keyboard
+            }
           );
-        }
+        } else if (newStatus === BackgroundComposerStatus.EXPIRED) {
+           await bot.api.sendMessage(
+             task.chat_id,
+             `⏱️ *Task expired!*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
+             { 
+               parse_mode: 'Markdown',
+               reply_markup: keyboard
+             }
+           );
+         } else if (newStatus === BackgroundComposerStatus.RUNNING) {
+           await bot.api.sendMessage(
+             task.chat_id,
+             `🔄 *Task is now running*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
+             { 
+               parse_mode: 'Markdown'
+             }
+           );
+         } else {
+          await bot.api.sendMessage(
+            task.chat_id,
+            `🔄 *Task status updated to ${newStatus}*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
+            { 
+              parse_mode: 'Markdown'
+            }
+          );
+         }
       }
     } catch (error) {
       console.error(`Error monitoring task ${task.id}:`, error);
@@ -84,6 +133,12 @@ setInterval(monitorTasks, 60000); // Check every minute
 // Bot handlers
 bot.use(async (ctx, next) => {
   if (!ctx.from || !ctx.chat) return;
+
+  // Middleware to check if user is allowed
+  if (!isUserAllowed(ctx.from.id)) {
+    await ctx.reply('❌ You don\'t have access to this bot. Contact the administrator.');
+    return;
+  }
 
   // Save user and chat info (no allowed field)
   await db.createUser({
@@ -127,10 +182,6 @@ Let's start! 🚀`, { parse_mode: 'Markdown' });
 });
 
 bot.command('tasks', async (ctx) => {
-  if (!isUserAllowed(ctx.from!.id)) {
-    await ctx.reply('❌ Access denied');
-    return;
-  }
 
   const tasks = await db.getActiveTasks();
   const userTasks = tasks.filter(t => t.user_id === ctx.from!.id && t.chat_id === ctx.chat!.id);
@@ -148,11 +199,6 @@ bot.command('tasks', async (ctx) => {
 });
 
 bot.command('cookies', async (ctx) => {
-  if (!isUserAllowed(ctx.from!.id)) {
-    await ctx.reply('❌ Access denied');
-    return;
-  }
-
   const cookies = await db.getCookies();
   const status = cookies ? '✅ Set' : '❌ Not set';
   
@@ -160,13 +206,14 @@ bot.command('cookies', async (ctx) => {
 });
 
 bot.command('clear', async (ctx) => {
-  if (!isUserAllowed(ctx.from!.id)) {
-    await ctx.reply('❌ Access denied');
-    return;
-  }
 
-  await ctx.reply('Clearing history...');
-  await db.clearHistory(ctx.from!.id, ctx.chat!.id);
+  try {
+    await db.clearHistory(ctx.from!.id, ctx.chat!.id);
+    await ctx.reply('History cleared successfully');
+  } catch (error) {
+    console.error('Error clearing history:', error);
+    await ctx.reply('Failed to clear history');
+  }
 });
 
 bot.command('help', async (ctx) => {
@@ -192,10 +239,6 @@ Repository access is configured via environment variables. Tasks are monitored a
 });
 
 bot.on('message:text', async (ctx) => {
-  if (!isUserAllowed(ctx.from!.id)) {
-    await ctx.reply('❌ Access denied');
-    return;
-  }
 
   const message = ctx.message.text;
   
@@ -212,11 +255,24 @@ bot.on('message:text', async (ctx) => {
       cursorApi
     });
 
-    // Show typing indicator
+    // Show typing indicator periodically
     await ctx.replyWithChatAction('typing');
+    const typingInterval = setInterval(async () => {
+      try {
+        await ctx.replyWithChatAction('typing');
+      } catch (error) {
+        console.error('Error sending typing action:', error);
+      }
+    }, 6000);
 
-    // Process message with agent
-    const response = await agent.processMessage(message);
+    let response: string | { type: string; text: string; buttons: { text: string; url: string }[] };
+    try {
+      // Process message with agent
+      response = await agent.processMessage(message);
+    } finally {
+      // Always clear the typing interval
+      clearInterval(typingInterval);
+    }
     
     // Save message and response
     await db.saveMessage({
@@ -259,12 +315,8 @@ bot.catch((err) => {
 
 // Start bot
 async function startBot() {
-  console.log('startBot() called');
   await initializeCookies();
-  console.log('Cookies initialized');
-  console.log('Starting bot...');
   await bot.start();
-  console.log('Bot started successfully!');
 }
 
 startBot().catch(console.error);

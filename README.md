@@ -11,10 +11,6 @@ A powerful Telegram bot for managing Cursor AI Background Composers with intelli
 - 🛡️ **Security**: Repository and user access control via environment variables
 - 📱 **User-friendly**: Simple commands with rich status information
 
-## 🚀 Deploy on Railway
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/QhBfPq?referralCode=bonus)
-
 ### Quick Setup:
 
 1. **Create Telegram Bot**: Message [@BotFather](https://t.me/BotFather) → `/newbot`
