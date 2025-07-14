@@ -9,14 +9,14 @@ WORKDIR /app
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install pnpm
-RUN npm install -g pnpm
+# Install pnpm v9 (v10 has postinstall issues with better-sqlite3) and node-gyp
+RUN npm install -g pnpm@9 node-gyp
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Rebuild better-sqlite3 to ensure it works
-RUN pnpm rebuild better-sqlite3
+# Manual build approach that fixes the missing bindings issue
+RUN cd node_modules/.pnpm/better-sqlite3*/node_modules/better-sqlite3 && pnpm run build-release
 
 # Copy source code
 COPY . .
