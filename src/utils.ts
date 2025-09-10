@@ -1,8 +1,9 @@
+import { logger } from './logger';
 import type { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
 import { google } from '@ai-sdk/google';
 import { generateText, type CoreMessage } from 'ai';
 import { z } from 'zod';
-import { ConversationImage } from './types/cursor-api';
+import { AgentImage } from './types/cursor-official';
 import sharp from 'sharp';
 
 const transcriptionSystemPrompt = `You are a highly proficient audio transcription robot. Your primary function is to accurately convert spoken audio from telegram voice messages into written text with correct punctuation, formatting and language preservation.
@@ -40,7 +41,7 @@ export async function transcribeAudio(
   audioBuffer: Buffer,
   mimeType: string = 'audio/ogg', // Default to ogg if not provided, but expect it for documents
 ): Promise<{ transcribedText: string; tldr: string | null }> {
-  console.log(`Starting audio transcription with Gemini for mimeType: ${mimeType}...`);
+  logger.info(`Starting audio transcription with Gemini for mimeType: ${mimeType}...`);
 
   return new Promise<{ transcribedText: string; tldr: string | null }>(
     async (resolve, reject) => {
@@ -102,7 +103,7 @@ export async function transcribeAudio(
                 transcribedText: string;
                 tldr: string | null;
               }) => {
-                console.log('Transcription tool executed by AI.');
+                logger.info('Transcription tool executed by AI.');
                 clearTimeout(timeoutId);
                 resolve({ transcribedText, tldr });
                 return 'Transcription successfully processed and extracted.';
@@ -111,7 +112,7 @@ export async function transcribeAudio(
           },
         });
       } catch (error) {
-        console.log(`Error during transcription: ${(error as Error).message}`);
+        logger.info(`Error during transcription: ${(error as Error).message}`);
         clearTimeout(timeoutId);
         reject(error);
       }
@@ -122,8 +123,8 @@ export async function transcribeAudio(
 export async function convertTelegramImageToCursorFormat(
   fileBuffer: Buffer,
   telegramFileId: string
-): Promise<ConversationImage> {
-  console.log(`📸 Converting ${fileBuffer.length} bytes image to PNG format`);
+): Promise<AgentImage> {
+  logger.info(`📸 Converting ${fileBuffer.length} bytes image to PNG format`);
   
   // Convert image to PNG and get dimensions
   const pngBuffer = await sharp(fileBuffer)
@@ -131,9 +132,7 @@ export async function convertTelegramImageToCursorFormat(
     .toBuffer();
   
   const metadata = await sharp(pngBuffer).metadata();
-  console.log(`📸 PNG conversion complete: ${metadata.width}x${metadata.height}, ${pngBuffer.length} bytes`);
-  
-  const uuid = `tg-${telegramFileId}-${Date.now()}`;
+  logger.info(`📸 PNG conversion complete: ${metadata.width}x${metadata.height}, ${pngBuffer.length} bytes`);
   
   return {
     data: pngBuffer.toString('base64'),
@@ -141,6 +140,5 @@ export async function convertTelegramImageToCursorFormat(
       width: metadata.width || 0,
       height: metadata.height || 0,
     },
-    uuid,
   };
 }

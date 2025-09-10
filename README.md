@@ -1,26 +1,26 @@
 # Cursor AI Telegram Bot
 
-A powerful Telegram bot for managing Cursor AI Background Composers with intelligent task management and real-time monitoring.
+A powerful Telegram bot for managing Cursor Background Agents with intelligent task management and real-time monitoring.
 
 ## ✨ Features
 
-- 🤖 **AI Task Management**: Start, monitor, and manage Cursor AI coding tasks
-- 🔐 **Secure Authentication**: Cookie-based authentication with validation
-- 📊 **Real-time Monitoring**: Automatic task progress tracking and notifications
-- 💬 **Interactive Interface**: Telegram buttons for external links and actions
-- 🛡️ **Security**: Repository and user access control via environment variables
-- 📱 **User-friendly**: Simple commands with rich status information
-- 🎤 **Voice Messages**: AI-powered voice message transcription using Gemini
-- 📸 **Image Support**: Send photos to include in Cursor AI tasks (cached for 3 minutes)
-- ⚙️ **Customizable**: Custom prompts and instructions via environment variables
+- **AI Task Management**: Start, monitor, follow up, and manage Cursor AI tasks
+- **Secure Authentication**: Official API via `CURSOR_API_KEY` (no cookies)
+- **Real-time Monitoring**: Automatic task progress tracking and notifications
+- **Interactive Interface**: Telegram buttons for external links and actions
+- **Security**: Repository and user access control via environment variables
+- **User-friendly**: Simple commands with rich status information
+- **Voice Messages**: AI-powered voice message transcription using Gemini
+- **Image Support**: Send photos to include in Cursor AI tasks (cached for 3 minutes)
+- **Customizable**: Custom prompts and instructions via environment variables
 
 ### Quick Setup:
 
 1. **Create Telegram Bot**: Message [@BotFather](https://t.me/BotFather) → `/newbot`
 2. **Get your User ID**: Message [@userinfobot](https://t.me/userinfobot) 
-3. **Deploy**: Click Railway button, add your `BOT_TOKEN` and `OPENROUTER_API_KEY`
+3. **Deploy**: Click Railway button, add your `BOT_TOKEN`, `OPENROUTER_API_KEY`, and `CURSOR_API_KEY`
 4. **Volume**: Railway will auto-create volume for `/app/data` (SQLite database storage)
-5. **Setup Cursor cookies**: Send your `WorkosCursorSessionToken` to the bot
+5. Done — no cookies required
 
 ## 🛠️ Local Development
 
@@ -40,6 +40,7 @@ Create `.env` file:
 # Required
 BOT_TOKEN=your_telegram_bot_token_here
 OPENROUTER_API_KEY=your_openrouter_api_key_here
+CURSOR_API_KEY=your_cursor_api_key_here
 
 # Optional: OpenRouter model (default: openai/gpt-4.1)
 OPENROUTER_MODEL=openai/gpt-4.1
@@ -57,17 +58,7 @@ GOOGLE_GENERATIVE_AI_API_KEY=your_google_api_key_here
 CUSTOM_PROMPT="Focus on repos with skipcalls prefix if user asks to add something"
 ```
 
-### 3. Setup Cursor API Cookies
-
-1. Go to [https://cursor.com/agents](https://cursor.com/agents)
-2. Open Developer Tools (F12)
-3. Go to Network tab
-4. Refresh the page
-5. Find any request to cursor.com
-6. Copy the entire Cookie header value
-7. Send it to the bot. YOU NEED ONLY WorkosCursorSessionToken cookie value. Send it in format WorkosCursorSessionToken=...
-
-### 4. Run the Bot
+### 3. Run the Bot
 
 ```bash
 pnpm run build
@@ -80,7 +71,6 @@ pnpm start
 |---------|-------------|
 | `/start` | Welcome message and setup guide |
 | `/tasks` | View your active tasks |
-| `/cookies` | Get cookie setup instructions |
 | `/help` | Show available commands |
 | 🎤 **Voice Messages** | Send voice messages for AI transcription and processing |
 
@@ -91,6 +81,9 @@ pnpm start
 | `BOT_TOKEN` | Yes | Telegram bot token from @BotFather |
 | `OPENROUTER_API_KEY` | Yes | OpenRouter API key for AI functionality |
 | `OPENROUTER_MODEL` | No | OpenRouter model (default: 'openai/gpt-4.1') |
+| `CURSOR_API_KEY` | Yes | API key for official Cursor Background Agents API |
+| `CURSOR_REPOS_TTL_MS` | No | In-memory cache TTL for `/v0/repositories` (default: 60000) |
+| `CURSOR_MODELS_TTL_MS` | No | In-memory cache TTL for `/v0/models` (default: 7200000, i.e. 2 hours) |
 | `ALLOWED_REPOS` | No | Comma-separated list of allowed repository URLs |
 | `ALLOWED_USERS` | No | Comma-separated list of allowed Telegram user IDs |
 | `DB_PATH` | No | Database file path (defaults to 'bot.db', Railway: '/app/data/bot.db') |
@@ -99,9 +92,8 @@ pnpm start
 
 ## 🛡️ Security
 
-- **No Cookie Exposure**: The bot never exposes actual cookie values
+- **No Secrets Exposure**: The bot never exposes API keys or secrets
 - **Repository/User Control**: Optional repository and user access control via environment variables
-- **Authentication Validation**: Cookies are validated before every operation
 - **Operation Tracking**: All actions are logged for audit purposes
 
 ## 📖 Usage Examples
@@ -160,7 +152,7 @@ Bot: 📊 Active Tasks (2):
 
 ## 🔄 Task Lifecycle
 
-1. **Start**: Create background composer task in repository
+1. **Start**: Create background agent task in repository
 2. **Monitor**: Real-time status tracking and updates
 3. **Notify**: Automatic notifications on completion/failure
 4. **Manage**: Stop or cancel running tasks as needed
@@ -191,7 +183,7 @@ The bot uses SQLite with the following main tables:
 ## 📝 API Integration
 
 The bot integrates with:
-- **Cursor API**: For background composer management
+- **Cursor API**: For Background Agents management (official API)
 - **OpenRouter API**: For AI-powered interactions
 - **Telegram Bot API**: For messaging and user interface
 

@@ -1,3 +1,4 @@
+import { logger } from './logger';
 import BetterSqlite3 from 'better-sqlite3';
 import { CoreMessage } from 'ai';
 import * as fs from 'fs';
@@ -274,7 +275,7 @@ export class Database {
       try {
         return JSON.parse(msg.message_data) as CoreMessage;
       } catch (error) {
-        console.error('Error parsing message data:', error);
+        logger.error('Error parsing message data:', error);
         return { role: 'user', content: 'Error parsing message' } as CoreMessage;
       }
     });
@@ -332,14 +333,7 @@ export class Database {
     this.db.exec(`DELETE FROM conversation_steps WHERE user_id = ${userId} AND chat_id = ${chatId}`);
   }
 
-  async getCookies(): Promise<string | null> {
-    const cookies = await this.getConfig('cursor_cookies');
-    return cookies;
-  }
-
-  async setCookies(cookies: string): Promise<void> {
-    return this.setConfig('cursor_cookies', cookies);
-  }
+  // Removed cookie helpers: official API uses CURSOR_API_KEY
 
   close(): void {
     this.db.close();

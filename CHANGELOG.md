@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [1.1.0] - 2025-09-10
+
+Rebuild to work using official Cursor API.
+
+## [1.0.0] - 2025-08-01~
 
 Added voice message support with Google Gemini AI transcription and custom prompt configuration via `CUSTOM_PROMPT` environment variable. Refactored message processing logic and improved access control for better code maintainability.
 
