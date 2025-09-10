@@ -1,0 +1,13 @@
+version: "3"
+services:
+  app:
+    image: hormold/cursor-telegram-bot:latest
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    env_file: .env
+    environment:
+      - DB_URL=sqlite://sqlite-data/bot.db
+
+
+volumes:
+  sqlite-data:
