@@ -84,14 +84,20 @@ bot.use(async (ctx, next) => {
 
   const mentionOnlyMode = process.env.MENTION_ONLY_MODE === 'true';
   if (mentionOnlyMode) {
+    // Mention OR reply to bot message itself
     const botInfo = await ctx.api.getMe();
     const botMention = `@${botInfo.username}`;
     const isDirectMessage = ctx.chat?.type === 'private';
     const isMentioned = ctx.message?.text?.includes(botMention);
+    const isReplyToBot = ctx.message?.reply_to_message?.from?.id === botInfo.id;
     
     // Only respond if it's a direct message or bot is mentioned
-    if (!isDirectMessage && !isMentioned) {
-      logger.info('Skipping message - mention-only mode enabled and bot not mentioned');
+    if (!isDirectMessage && !isMentioned && !isReplyToBot) {
+      logger.info('Skipping message - mention-only mode enabled and bot not mentioned', {
+        isDirectMessage,
+        isMentioned,
+        isReplyToBot
+      });
       return;
     }
   }
