@@ -41,7 +41,7 @@ export interface ConversationMessage {
 
 // Interface for conversation steps (from onStepFinish)
 export interface ConversationStep {
-  id: number;
+  id?: number;
   user_id: number;
   chat_id: number;
   step_number: number;

@@ -4,7 +4,7 @@ import 'dotenv/config';
 import { generateText, tool, ToolSet, CoreMessage } from 'ai';
 import { z } from 'zod';
 import CursorOfficialApi from './cursor-official-api';
-import { Database } from './database';
+import { ConversationStep, Database } from './database';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generatePrompt } from './prompt';
 import { getImagesFromCache, clearImagesFromCache } from './image-cache';
@@ -47,7 +47,7 @@ function createToolsWithContext(context: AgentContext): ToolSet {
         repoUrl: z.string().describe('Repository URL'),
         taskDescription: z.string().describe('Task description for AI'),
         branch: z.string().default('main').describe('Branch name (default: main)'),
-        model: z.enum(['claude-4-sonnet-thinking', 'o3']).optional().describe('Optional model; omit for Auto'),
+        model: z.string().optional().describe('Optional model; omit for Auto'),
       }),
       execute: async ({ repoUrl, taskDescription, branch, model }: { repoUrl: string; taskDescription: string; branch?: string; model?: string }) => {
         try {
@@ -204,6 +204,14 @@ function createToolsWithContext(context: AgentContext): ToolSet {
       },
     }),
 
+    getAvailableModels: tool({
+      description: 'Get available models for Cursor Agent',
+      parameters: z.object({ dummy: z.string().describe('Dummy parameter') }),
+      execute: async () => {
+        return { models: await context.cursorApi.listModels() };
+      },
+    }),
+
     sendButtonMessage: tool({
       description: 'Send a message with Telegram inline buttons for external links',
       parameters: z.object({
@@ -256,7 +264,7 @@ export class Agent {
     }
   }
 
-  private async saveStepData(stepData: any): Promise<void> {
+  private async saveStepData(stepData: ConversationStep): Promise<void> {
     try {
       await this.context.db.saveConversationStep({
         user_id: this.context.userId,
@@ -315,16 +323,16 @@ ${userTasks.length > 0 ? userTasks.map(t =>
         onStepFinish: async (step) => {
           this.currentStepNumber++;
 
+          const stepData: ConversationStep = {
+            user_id: this.context.userId,
+            chat_id: this.context.chatId,
+            created_at: new Date().toISOString(),
+            step_number: this.currentStepNumber,
+            step_data: JSON.stringify(step),
+          };
+
           // Save step data to database
-          await this.saveStepData({
-            stepType: step.stepType,
-            text: step.text,
-            toolCalls: step.toolCalls,
-            toolResults: step.toolResults,
-            finishReason: step.finishReason,
-            usage: step.usage,
-            timestamp: new Date().toISOString(),
-          });
+          await this.saveStepData(stepData);
         },
       });
 
