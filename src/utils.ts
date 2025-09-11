@@ -5,6 +5,8 @@ import { generateText, type CoreMessage } from 'ai';
 import { z } from 'zod';
 import { AgentImage } from './types/cursor-official';
 import sharp from 'sharp';
+import { Context } from 'grammy';
+import { bot } from './env';
 
 const transcriptionSystemPrompt = `You are a highly proficient audio transcription robot. Your primary function is to accurately convert spoken audio from telegram voice messages into written text with correct punctuation, formatting and language preservation.
 
@@ -141,4 +143,123 @@ export async function convertTelegramImageToCursorFormat(
       height: metadata.height || 0,
     },
   };
+}
+
+// Access control via ENV
+export function isUserAllowed(userId: number): boolean {
+  const allowed = process.env.ALLOWED_USERS;
+  if (!allowed) return true;
+  return allowed.split(',').map(x => x.trim()).includes(userId.toString());
+}
+
+// Safe message sending with retry and fallback
+export async function safeSendMessage(
+  chatId: number, 
+  text: string, 
+  options: any = {},
+  maxRetries: number = 3
+): Promise<void> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await bot.api.sendMessage(chatId, text, options);
+      return; // Success
+    } catch (error: any) {
+      logger.error(`Attempt ${attempt}/${maxRetries} failed:`, error);
+      
+      // If it's a parsing error, try fallback formats
+      if (error.description?.includes("can't parse entities")) {
+        // First try HTML if we were using Markdown
+        if (options.parse_mode === 'Markdown') {
+          logger.info('Markdown parsing failed, trying HTML...');
+          try {
+            const htmlOptions = { ...options, parse_mode: 'HTML' };
+            // Convert basic Markdown to HTML
+            const htmlText = text
+              .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+              .replace(/\*(.*?)\*/g, '<i>$1</i>')
+              .replace(/`(.*?)`/g, '<code>$1</code>');
+            await bot.api.sendMessage(chatId, htmlText, htmlOptions);
+            return; // Success with HTML
+          } catch (htmlError) {
+            logger.error('HTML also failed:', htmlError);
+          }
+        }
+        
+        // Finally try plain text
+        logger.info('Trying plain text...');
+        try {
+          const plainOptions = { ...options };
+          delete plainOptions.parse_mode;
+          await bot.api.sendMessage(chatId, text, plainOptions);
+          return; // Success with plain text
+        } catch (plainError) {
+          logger.error('Plain text also failed:', plainError);
+        }
+      }
+      
+      // If this is the last attempt, throw the error
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Wait before retry (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+}
+
+// Safe context reply with retry and fallback
+export async function safeReply(
+  ctx: Context,
+  text: string,
+  options: any = {},
+  maxRetries: number = 3
+): Promise<void> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await ctx.reply(text, options);
+      return; // Success
+    } catch (error: any) {
+      logger.error(`Reply attempt ${attempt}/${maxRetries} failed:`, error);
+      
+      // If it's a parsing error, try fallback formats
+      if (error.description?.includes("can't parse entities")) {
+        // First try HTML if we were using Markdown
+        if (options.parse_mode === 'Markdown') {
+          logger.info('Markdown parsing failed, trying HTML reply...');
+          try {
+            const htmlOptions = { ...options, parse_mode: 'HTML' };
+            // Convert basic Markdown to HTML
+            const htmlText = text
+              .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+              .replace(/\*(.*?)\*/g, '<i>$1</i>')
+              .replace(/`(.*?)`/g, '<code>$1</code>');
+            await ctx.reply(htmlText, htmlOptions);
+            return; // Success with HTML
+          } catch (htmlError) {
+            logger.error('HTML reply also failed:', htmlError);
+          }
+        }
+        
+        // Finally try plain text
+        logger.info('Trying plain text reply...');
+        try {
+          const plainOptions = { ...options };
+          delete plainOptions.parse_mode;
+          await ctx.reply(text, plainOptions);
+          return; // Success with plain text
+        } catch (plainError) {
+          logger.error('Plain text reply also failed:', plainError);
+        }
+      }
+      
+      // If this is the last attempt, throw the error
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Wait before retry (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
 }

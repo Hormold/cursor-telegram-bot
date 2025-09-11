@@ -1,221 +1,11 @@
 import { logger } from './logger';
 import 'dotenv/config';
-import { Bot, Context } from 'grammy';
-import { Database } from './database';
-import CursorOfficialApi from './cursor-official-api';
+import { Context } from 'grammy';
 import Agent from './agent';
-import { transcribeAudio, convertTelegramImageToCursorFormat } from './utils';
+import { transcribeAudio, convertTelegramImageToCursorFormat, safeSendMessage, safeReply, isUserAllowed } from './utils';
 import { saveImagesToCache, getImagesFromCache } from './image-cache';
-
-const bot = new Bot(process.env.BOT_TOKEN || '');
-const db = new Database();
-const apiKey = process.env.CURSOR_API_KEY || '';
-if (!apiKey) {
-  throw new Error('No CURSOR_API_KEY configured for monitoring');
-}
-const cursorApi = new CursorOfficialApi({ apiKey });
-// Official API uses CURSOR_API_KEY; no cookie initialization required
-
-// Safe message sending with retry and fallback
-async function safeSendMessage(
-  chatId: number, 
-  text: string, 
-  options: any = {},
-  maxRetries: number = 3
-): Promise<void> {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      await bot.api.sendMessage(chatId, text, options);
-      return; // Success
-    } catch (error: any) {
-      logger.error(`Attempt ${attempt}/${maxRetries} failed:`, error);
-      
-      // If it's a parsing error, try fallback formats
-      if (error.description?.includes("can't parse entities")) {
-        // First try HTML if we were using Markdown
-        if (options.parse_mode === 'Markdown') {
-          logger.info('Markdown parsing failed, trying HTML...');
-          try {
-            const htmlOptions = { ...options, parse_mode: 'HTML' };
-            // Convert basic Markdown to HTML
-            const htmlText = text
-              .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-              .replace(/\*(.*?)\*/g, '<i>$1</i>')
-              .replace(/`(.*?)`/g, '<code>$1</code>');
-            await bot.api.sendMessage(chatId, htmlText, htmlOptions);
-            return; // Success with HTML
-          } catch (htmlError) {
-            logger.error('HTML also failed:', htmlError);
-          }
-        }
-        
-        // Finally try plain text
-        logger.info('Trying plain text...');
-        try {
-          const plainOptions = { ...options };
-          delete plainOptions.parse_mode;
-          await bot.api.sendMessage(chatId, text, plainOptions);
-          return; // Success with plain text
-        } catch (plainError) {
-          logger.error('Plain text also failed:', plainError);
-        }
-      }
-      
-      // If this is the last attempt, throw the error
-      if (attempt === maxRetries) {
-        throw error;
-      }
-      
-      // Wait before retry (exponential backoff)
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-    }
-  }
-}
-
-// Safe context reply with retry and fallback
-async function safeReply(
-  ctx: Context,
-  text: string,
-  options: any = {},
-  maxRetries: number = 3
-): Promise<void> {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      await ctx.reply(text, options);
-      return; // Success
-    } catch (error: any) {
-      logger.error(`Reply attempt ${attempt}/${maxRetries} failed:`, error);
-      
-      // If it's a parsing error, try fallback formats
-      if (error.description?.includes("can't parse entities")) {
-        // First try HTML if we were using Markdown
-        if (options.parse_mode === 'Markdown') {
-          logger.info('Markdown parsing failed, trying HTML reply...');
-          try {
-            const htmlOptions = { ...options, parse_mode: 'HTML' };
-            // Convert basic Markdown to HTML
-            const htmlText = text
-              .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-              .replace(/\*(.*?)\*/g, '<i>$1</i>')
-              .replace(/`(.*?)`/g, '<code>$1</code>');
-            await ctx.reply(htmlText, htmlOptions);
-            return; // Success with HTML
-          } catch (htmlError) {
-            logger.error('HTML reply also failed:', htmlError);
-          }
-        }
-        
-        // Finally try plain text
-        logger.info('Trying plain text reply...');
-        try {
-          const plainOptions = { ...options };
-          delete plainOptions.parse_mode;
-          await ctx.reply(text, plainOptions);
-          return; // Success with plain text
-        } catch (plainError) {
-          logger.error('Plain text reply also failed:', plainError);
-        }
-      }
-      
-      // If this is the last attempt, throw the error
-      if (attempt === maxRetries) {
-        throw error;
-      }
-      
-      // Wait before retry (exponential backoff)
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-    }
-  }
-}
-
-// Access control via ENV
-function isUserAllowed(userId: number): boolean {
-  const allowed = process.env.ALLOWED_USERS;
-  if (!allowed) return true;
-  return allowed.split(',').map(x => x.trim()).includes(userId.toString());
-}
-
-// Background task monitoring
-async function monitorTasks() {
-  const tasks = await db.getActiveTasks();
-
-  for (const task of tasks) {
-    try {
-      const agent = await cursorApi.getAgent(task.composer_id);
-      const oldStatus = task.status;
-      const newStatus = agent.status;
-
-      const keyboard = {
-        inline_keyboard: [
-          [
-            {
-              text: '🔍 Check Task Details',
-              url: `https://cursor.com/agents?selectedBcId=${task.composer_id}`
-            },
-            {
-              text: '📁 Open Repository',
-              url: task.repo_url
-            }
-          ]
-        ]
-      };
-
-      if (oldStatus !== newStatus) {
-        await db.updateTask(task.id, newStatus);
-        
-        // Notify user if task completed or failed
-        if (newStatus === 'FINISHED') {
-          
-          
-          await safeSendMessage(
-            task.chat_id,
-            `✅ *Task completed!*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
-            { 
-              parse_mode: 'Markdown',
-              reply_markup: keyboard
-            }
-          );
-        } else if (newStatus === 'ERROR') {
-          await safeSendMessage(
-            task.chat_id,
-            `❌ *Task failed!*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
-            { 
-              parse_mode: 'Markdown',
-              reply_markup: keyboard
-            }
-          );
-        } else if (newStatus === 'EXPIRED') {
-           await safeSendMessage(
-             task.chat_id,
-             `⏱️ *Task expired!*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
-             { 
-               parse_mode: 'Markdown',
-               reply_markup: keyboard
-             }
-           );
-         } else if (newStatus === 'RUNNING') {
-           await safeSendMessage(
-             task.chat_id,
-             `🔄 *Task is now running*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
-             { 
-               parse_mode: 'Markdown'
-             }
-           );
-         } else {
-          await safeSendMessage(
-            task.chat_id,
-            `🔄 *Task status updated to ${newStatus}*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
-            { 
-              parse_mode: 'Markdown'
-            }
-          );
-         }
-      }
-    } catch (error) {
-      logger.error(`Error monitoring task ${task.id}:`, error);
-    }
-  }
-}
+import { bot, db, cursorApi } from './env';
+import { monitorTasks } from './monitor';
 
 // Common message processing function
 async function processUserMessage(
@@ -283,8 +73,6 @@ let monitorInterval: NodeJS.Timeout | null = null;
 
 // Bot handlers
 bot.use(async (ctx, next) => {
-  logger.info('ctx.from', ctx.from);
-  logger.info('ctx.chat', ctx.chat);
   if (!ctx.from || !ctx.chat) return;
 
   // Middleware to check if user is allowed
@@ -292,6 +80,20 @@ bot.use(async (ctx, next) => {
   if (!isUserAllowed(ctx.chat.id) && !isUserAllowed(ctx.from.id)) {
     await safeReply(ctx, '❌ You don\'t have access to this bot. Contact the administrator.');
     return;
+  }
+
+  const mentionOnlyMode = process.env.MENTION_ONLY_MODE === 'true';
+  if (mentionOnlyMode) {
+    const botInfo = await ctx.api.getMe();
+    const botMention = `@${botInfo.username}`;
+    const isDirectMessage = ctx.chat?.type === 'private';
+    const isMentioned = ctx.message?.text?.includes(botMention);
+    
+    // Only respond if it's a direct message or bot is mentioned
+    if (!isDirectMessage && !isMentioned) {
+      logger.info('Skipping message - mention-only mode enabled and bot not mentioned');
+      return;
+    }
   }
 
   // Save user and chat info (no allowed field)
@@ -347,14 +149,18 @@ bot.command('tasks', async (ctx) => {
 });
 
 bot.command('clear', async (ctx) => {
-
   try {
     await db.clearHistory(ctx.from!.id, ctx.chat!.id);
-    await safeReply(ctx, 'History cleared successfully');
+    await safeReply(ctx, 'Chat history cleared successfully');
   } catch (error) {
     logger.error('Error clearing history:', error);
-    await safeReply(ctx, 'Failed to clear history');
+    await safeReply(ctx, 'Failed to clear chat history');
   }
+});
+
+bot.command('models', async (ctx) => {
+  const models = await cursorApi.listModels();
+  await safeReply(ctx, `*Available Models for Cursor Agent:*\n\n${models.models.join('\n')}`);
 });
 
 bot.command('help', async (ctx) => {
@@ -363,6 +169,8 @@ bot.command('help', async (ctx) => {
 *Available Commands:*
 /start - Start the bot
 /tasks - Show your active tasks
+/clear - Clear chat history
+/models - Show available models
 /help - Show this help
 
 *Usage Examples:*
@@ -382,21 +190,6 @@ bot.on('message:text', async (ctx) => {
   logger.info('message:text', ctx);
 
   const message = ctx.message.text;
-  
-  // Check if mention-only mode is enabled
-  const mentionOnlyMode = process.env.MENTION_ONLY_MODE === 'true';
-  if (mentionOnlyMode) {
-    const botInfo = await ctx.api.getMe();
-    const botMention = `@${botInfo.username}`;
-    const isDirectMessage = ctx.chat?.type === 'private';
-    const isMentioned = message.includes(botMention);
-    
-    // Only respond if it's a direct message or bot is mentioned
-    if (!isDirectMessage && !isMentioned) {
-      logger.info('Skipping message - mention-only mode enabled and bot not mentioned');
-      return;
-    }
-  }
   
   try {
     await processUserMessage(ctx, message);
