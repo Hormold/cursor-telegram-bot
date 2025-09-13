@@ -65,7 +65,8 @@ export async function monitorTasks() {
              task.chat_id,
              `🔄 *Task is now running*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
              { 
-               parse_mode: 'Markdown'
+               parse_mode: 'Markdown',
+               reply_markup: keyboard
              }
            );
          } else {
@@ -73,7 +74,8 @@ export async function monitorTasks() {
             task.chat_id,
             `🔄 *Task status updated to ${newStatus}*\n\n*${task.task_description}*\n\nRepo: ${task.repo_url}\nComposer: \`${task.composer_id}\``,
             { 
-              parse_mode: 'Markdown'
+              parse_mode: 'Markdown',
+              reply_markup: keyboard
             }
           );
          }
